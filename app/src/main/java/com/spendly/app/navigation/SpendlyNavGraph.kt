@@ -1,10 +1,10 @@
 package com.spendly.app.navigation
 
-import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -14,26 +14,18 @@ import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
-import com.spendly.app.feature.ai.AiAssistantScreen
-import com.spendly.app.feature.analytics.AnalyticsScreen
 import com.spendly.app.feature.auth.SignInScreen
 import com.spendly.app.feature.auth.SignUpScreen
-import com.spendly.app.feature.bmi.BmiScreen
-import com.spendly.app.feature.budgets.BudgetsScreen
-import com.spendly.app.feature.calendar.CalendarScreen
-import com.spendly.app.feature.dashboard.DashboardScreen
-import com.spendly.app.feature.goals.GoalsScreen
-import com.spendly.app.feature.payments.PaymentsScreen
-import com.spendly.app.feature.planner.PlannerScreen
 import com.spendly.app.feature.profile.FinancialSetupScreen
-import com.spendly.app.feature.subscriptions.SubscriptionsScreen
-import com.spendly.app.feature.transactions.TransactionsScreen
 
 object Routes {
     const val SPLASH = "splash"
     const val SIGN_IN = "sign_in"
     const val SIGN_UP = "sign_up"
     const val FINANCIAL_SETUP = "financial_setup"
+    const val MAIN = "main"
+
+    // Destinations inside the post-login drawer shell (MainAppShell).
     const val DASHBOARD = "dashboard"
     const val PAYMENTS = "payments"
     const val TRANSACTIONS = "transactions"
@@ -49,7 +41,14 @@ object Routes {
 
 @Composable
 fun SpendlyNavGraph(navController: NavHostController = rememberNavController()) {
-    NavHost(navController = navController, startDestination = Routes.SPLASH) {
+    NavHost(
+        navController = navController,
+        startDestination = Routes.SPLASH,
+        enterTransition = forwardEnter,
+        exitTransition = forwardExit,
+        popEnterTransition = backEnter,
+        popExitTransition = backExit
+    ) {
 
         composable(Routes.SPLASH) {
             val appStartViewModel: AppStartViewModel = hiltViewModel()
@@ -59,7 +58,7 @@ fun SpendlyNavGraph(navController: NavHostController = rememberNavController()) 
                 StartDestination.Loading -> LoadingScreen()
                 StartDestination.SignedOut -> NavigateOnce(navController, Routes.SIGN_IN, Routes.SPLASH)
                 StartDestination.NeedsFinancialSetup -> NavigateOnce(navController, Routes.FINANCIAL_SETUP, Routes.SPLASH)
-                StartDestination.Ready -> NavigateOnce(navController, Routes.DASHBOARD, Routes.SPLASH)
+                StartDestination.Ready -> NavigateOnce(navController, Routes.MAIN, Routes.SPLASH)
             }
         }
 
@@ -80,30 +79,18 @@ fun SpendlyNavGraph(navController: NavHostController = rememberNavController()) 
         composable(Routes.FINANCIAL_SETUP) {
             FinancialSetupScreen(
                 onSetupComplete = {
-                    navController.navigate(Routes.DASHBOARD) { popUpTo(Routes.FINANCIAL_SETUP) { inclusive = true } }
+                    navController.navigate(Routes.MAIN) { popUpTo(Routes.FINANCIAL_SETUP) { inclusive = true } }
                 }
             )
         }
 
-        composable(Routes.DASHBOARD) {
-            DashboardScreen(
-                onNavigate = { route -> navController.navigate(route) },
+        composable(Routes.MAIN) {
+            MainAppShell(
                 onSignOut = {
                     navController.navigate(Routes.SPLASH) { popUpTo(0) }
                 }
             )
         }
-
-        composable(Routes.PAYMENTS) { PaymentsScreen() }
-        composable(Routes.TRANSACTIONS) { TransactionsScreen() }
-        composable(Routes.BUDGETS) { BudgetsScreen() }
-        composable(Routes.ANALYTICS) { AnalyticsScreen() }
-        composable(Routes.SUBSCRIPTIONS) { SubscriptionsScreen() }
-        composable(Routes.GOALS) { GoalsScreen() }
-        composable(Routes.PLANNER) { PlannerScreen() }
-        composable(Routes.CALENDAR) { CalendarScreen() }
-        composable(Routes.BMI) { BmiScreen() }
-        composable(Routes.AI) { AiAssistantScreen() }
     }
 }
 
@@ -116,7 +103,7 @@ private fun LoadingScreen() {
 
 @Composable
 private fun NavigateOnce(navController: NavHostController, target: String, from: String) {
-    androidx.compose.runtime.LaunchedEffect(target) {
+    LaunchedEffect(target) {
         navController.navigate(target) { popUpTo(from) { inclusive = true } }
     }
 }

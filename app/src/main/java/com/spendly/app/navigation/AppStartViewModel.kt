@@ -2,6 +2,7 @@ package com.spendly.app.navigation
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.spendly.app.domain.usecase.EnsureDefaultCategoriesUseCase
 import com.spendly.app.domain.usecase.GetCurrentUserUseCase
 import com.spendly.app.domain.usecase.GetProfileUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -21,7 +22,8 @@ sealed class StartDestination {
 @HiltViewModel
 class AppStartViewModel @Inject constructor(
     private val getCurrentUserUseCase: GetCurrentUserUseCase,
-    private val getProfileUseCase: GetProfileUseCase
+    private val getProfileUseCase: GetProfileUseCase,
+    private val ensureDefaultCategoriesUseCase: EnsureDefaultCategoriesUseCase
 ) : ViewModel() {
 
     private val _startDestination = MutableStateFlow<StartDestination>(StartDestination.Loading)
@@ -35,6 +37,7 @@ class AppStartViewModel @Inject constructor(
         viewModelScope.launch {
             _startDestination.value = StartDestination.Loading
             val user = getCurrentUserUseCase()
+            if (user != null) ensureDefaultCategoriesUseCase(user.id)
             _startDestination.value = when {
                 user == null -> StartDestination.SignedOut
                 getProfileUseCase(user.id) == null -> StartDestination.NeedsFinancialSetup

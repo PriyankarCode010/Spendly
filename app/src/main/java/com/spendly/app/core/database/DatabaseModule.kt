@@ -34,11 +34,29 @@ object DatabaseModule {
 
         return Room.databaseBuilder(context, SpendlyDatabase::class.java, DB_NAME)
             .openHelperFactory(factory)
+            // Pre-release: no production data exists yet, so a destructive
+            // migration is fine until the schema stabilizes.
+            .fallbackToDestructiveMigration(true)
             .build()
     }
 
     @Provides
     fun provideProfileDao(database: SpendlyDatabase) = database.profileDao()
+
+    @Provides
+    fun provideCategoryDao(database: SpendlyDatabase) = database.categoryDao()
+
+    @Provides
+    fun provideTransactionDao(database: SpendlyDatabase) = database.transactionDao()
+
+    @Provides
+    fun provideBudgetDao(database: SpendlyDatabase) = database.budgetDao()
+
+    @Provides
+    fun provideSubscriptionDao(database: SpendlyDatabase) = database.subscriptionDao()
+
+    @Provides
+    fun provideGoalDao(database: SpendlyDatabase) = database.goalDao()
 
     private fun generatePassphrase(): String {
         val bytes = ByteArray(32)
