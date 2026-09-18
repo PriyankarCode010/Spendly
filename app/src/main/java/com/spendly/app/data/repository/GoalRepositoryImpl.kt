@@ -19,10 +19,27 @@ class GoalRepositoryImpl @Inject constructor(
     override fun observeAll(userId: String): Flow<List<Goal>> =
         goalDao.observeAll(userId).map { list -> list.map { it.toDomain() } }
 
+    override suspend fun getById(id: String): Goal? =
+        goalDao.getById(id)?.toDomain()
+
     override suspend fun addGoal(goal: Goal): AppResult<Unit> = runCatching {
         goalDao.insert(goal.toEntity())
     }.fold(
         onSuccess = { AppResult.Success(Unit) },
         onFailure = { AppResult.Error(it.message ?: "Failed to save goal", it) }
+    )
+
+    override suspend fun updateGoal(goal: Goal): AppResult<Unit> = runCatching {
+        goalDao.update(goal.toEntity())
+    }.fold(
+        onSuccess = { AppResult.Success(Unit) },
+        onFailure = { AppResult.Error(it.message ?: "Failed to update goal", it) }
+    )
+
+    override suspend fun deleteGoal(id: String): AppResult<Unit> = runCatching {
+        goalDao.deleteById(id)
+    }.fold(
+        onSuccess = { AppResult.Success(Unit) },
+        onFailure = { AppResult.Error(it.message ?: "Failed to delete goal", it) }
     )
 }

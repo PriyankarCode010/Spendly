@@ -24,6 +24,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
+import com.spendly.app.domain.model.Goal
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
@@ -33,16 +34,18 @@ private val dateFormatter = SimpleDateFormat("dd MMM yyyy", Locale.getDefault())
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun AddGoalForm(
+    initial: Goal? = null,
     onSave: (name: String, targetAmount: Double, currentSaved: Double, targetDate: Long?) -> Unit
 ) {
-    var name by remember { mutableStateOf("") }
-    var targetAmount by remember { mutableStateOf("") }
-    var currentSaved by remember { mutableStateOf("") }
-    var targetDate by remember { mutableStateOf<Long?>(null) }
+    var name by remember { mutableStateOf(initial?.name ?: "") }
+    var targetAmount by remember { mutableStateOf(initial?.targetAmount?.toString() ?: "") }
+    var currentSaved by remember { mutableStateOf(initial?.currentSaved?.toString() ?: "") }
+    var targetDate by remember { mutableStateOf(initial?.targetDate) }
     var showDatePicker by remember { mutableStateOf(false) }
+    var isSaving by remember { mutableStateOf(false) }
 
     Column(modifier = Modifier.fillMaxWidth().padding(horizontal = 24.dp, vertical = 8.dp)) {
-        Text("Plan a goal", style = MaterialTheme.typography.titleLarge)
+        Text(if (initial == null) "Plan a goal" else "Edit goal", style = MaterialTheme.typography.titleLarge)
         Spacer(modifier = Modifier.height(16.dp))
 
         OutlinedTextField(
@@ -81,9 +84,10 @@ fun AddGoalForm(
 
         Button(
             onClick = {
+                isSaving = true
                 onSave(name, targetAmount.toDoubleOrNull() ?: 0.0, currentSaved.toDoubleOrNull() ?: 0.0, targetDate)
             },
-            enabled = name.isNotBlank() && (targetAmount.toDoubleOrNull() ?: 0.0) > 0.0,
+            enabled = !isSaving && name.isNotBlank() && (targetAmount.toDoubleOrNull() ?: 0.0) > 0.0,
             modifier = Modifier.fillMaxWidth()
         ) {
             Text("Save")

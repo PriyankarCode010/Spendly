@@ -133,6 +133,33 @@ fun DashboardScreen(
         }
 
         item {
+            Card(modifier = Modifier.fillMaxWidth()) {
+                Column(modifier = Modifier.padding(20.dp)) {
+                    Text(
+                        text = "Upcoming this month",
+                        style = MaterialTheme.typography.labelLarge,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                    Text(
+                        text = "${uiState.profile?.currency.orEmpty()} ${uiState.upcomingCommitments.total}",
+                        style = MaterialTheme.typography.headlineMedium
+                    )
+                    Text(
+                        text = "Subscriptions due: ${uiState.profile?.currency.orEmpty()} ${uiState.upcomingCommitments.subscriptionAmount}  ·  " +
+                            "Goal savings: ${uiState.profile?.currency.orEmpty()} ${uiState.upcomingCommitments.goalContributionAmount}",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                    Text(
+                        text = "Forecast only - not yet spent, and separate from Safe to spend above.",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                }
+            }
+        }
+
+        item {
             Text(text = "Quick actions", style = MaterialTheme.typography.titleMedium)
             Spacer(modifier = Modifier.height(12.dp))
             LazyRow(horizontalArrangement = Arrangement.spacedBy(16.dp)) {

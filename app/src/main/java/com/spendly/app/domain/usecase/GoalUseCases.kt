@@ -13,3 +13,11 @@ class GetGoalsUseCase @Inject constructor(private val repository: GoalRepository
 class AddGoalUseCase @Inject constructor(private val repository: GoalRepository) {
     suspend operator fun invoke(goal: Goal): AppResult<Unit> = repository.addGoal(goal)
 }
+
+class UpdateGoalUseCase @Inject constructor(private val repository: GoalRepository) {
+    suspend operator fun invoke(goal: Goal): AppResult<Unit> = repository.updateGoal(goal)
+}
+
+class DeleteGoalUseCase @Inject constructor(private val repository: GoalRepository) {
+    suspend operator fun invoke(id: String): AppResult<Unit> = repository.deleteGoal(id)
+}

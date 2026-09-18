@@ -16,13 +16,35 @@ class SubscriptionRepositoryImpl @Inject constructor(
     private val subscriptionDao: SubscriptionDao
 ) : SubscriptionRepository {
 
+    override fun observeActive(userId: String): Flow<List<Subscription>> =
+        subscriptionDao.observeActive(userId).map { list -> list.map { it.toDomain() } }
+
     override fun observeAll(userId: String): Flow<List<Subscription>> =
         subscriptionDao.observeAll(userId).map { list -> list.map { it.toDomain() } }
+
+    override suspend fun getById(id: String): Subscription? =
+        subscriptionDao.getById(id)?.toDomain()
 
     override suspend fun addSubscription(subscription: Subscription): AppResult<Unit> = runCatching {
         subscriptionDao.insert(subscription.toEntity())
     }.fold(
         onSuccess = { AppResult.Success(Unit) },
         onFailure = { AppResult.Error(it.message ?: "Failed to save subscription", it) }
+    )
+
+    override suspend fun updateSubscription(subscription: Subscription): AppResult<Unit> = runCatching {
+        subscriptionDao.update(subscription.toEntity())
+    }.fold(
+        onSuccess = { AppResult.Success(Unit) },
+        onFailure = { AppResult.Error(it.message ?: "Failed to update subscription", it) }
+    )
+
+    // Cancellation retains the record (isActive = false) - never a hard delete.
+    override suspend fun cancelSubscription(id: String): AppResult<Unit> = runCatching {
+        val existing = subscriptionDao.getById(id) ?: error("Subscription not found")
+        subscriptionDao.update(existing.copy(isActive = false, updatedAt = System.currentTimeMillis()))
+    }.fold(
+        onSuccess = { AppResult.Success(Unit) },
+        onFailure = { AppResult.Error(it.message ?: "Failed to cancel subscription", it) }
     )
 }

@@ -8,5 +8,6 @@ data class Subscription(
     val frequency: SubscriptionFrequency,
     val nextPaymentDate: Long,
     val categoryId: String?,
-    val isActive: Boolean
+    val isActive: Boolean,
+    val updatedAt: Long
 )

@@ -10,7 +10,8 @@ fun GoalEntity.toDomain(): Goal = Goal(
     targetAmount = targetAmount,
     currentSaved = currentSaved,
     targetDate = targetDate,
-    createdAt = createdAt
+    createdAt = createdAt,
+    updatedAt = updatedAt
 )
 
 fun Goal.toEntity(): GoalEntity = GoalEntity(
@@ -20,5 +21,6 @@ fun Goal.toEntity(): GoalEntity = GoalEntity(
     targetAmount = targetAmount,
     currentSaved = currentSaved,
     targetDate = targetDate,
-    createdAt = createdAt
+    createdAt = createdAt,
+    updatedAt = updatedAt
 )

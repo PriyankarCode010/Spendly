@@ -20,7 +20,7 @@ import com.spendly.app.data.local.TransactionEntity
         ProfileEntity::class, CategoryEntity::class, TransactionEntity::class,
         BudgetEntity::class, SubscriptionEntity::class, GoalEntity::class
     ],
-    version = 5,
+    version = 6,
     exportSchema = false
 )
 abstract class SpendlyDatabase : RoomDatabase() {

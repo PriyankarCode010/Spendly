@@ -7,5 +7,6 @@ data class Goal(
     val targetAmount: Double,
     val currentSaved: Double,
     val targetDate: Long?,
-    val createdAt: Long
+    val createdAt: Long,
+    val updatedAt: Long
 )

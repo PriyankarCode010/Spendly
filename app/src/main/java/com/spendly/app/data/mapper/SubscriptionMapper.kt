@@ -12,7 +12,8 @@ fun SubscriptionEntity.toDomain(): Subscription = Subscription(
     frequency = SubscriptionFrequency.valueOf(frequency),
     nextPaymentDate = nextPaymentDate,
     categoryId = categoryId,
-    isActive = isActive
+    isActive = isActive,
+    updatedAt = updatedAt
 )
 
 fun Subscription.toEntity(): SubscriptionEntity = SubscriptionEntity(
@@ -23,5 +24,6 @@ fun Subscription.toEntity(): SubscriptionEntity = SubscriptionEntity(
     frequency = frequency.name,
     nextPaymentDate = nextPaymentDate,
     categoryId = categoryId,
-    isActive = isActive
+    isActive = isActive,
+    updatedAt = updatedAt
 )

@@ -31,6 +31,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import com.spendly.app.domain.model.Category
+import com.spendly.app.domain.model.Subscription
 import com.spendly.app.domain.model.SubscriptionFrequency
 import java.text.SimpleDateFormat
 import java.util.Date
@@ -41,19 +42,21 @@ private val dateFormatter = SimpleDateFormat("dd MMM yyyy", Locale.getDefault())
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun AddSubscriptionForm(
+    initial: Subscription? = null,
     categories: List<Category>,
     onSave: (name: String, amount: Double, frequency: SubscriptionFrequency, nextPaymentDate: Long, categoryId: String?) -> Unit
 ) {
-    var name by remember { mutableStateOf("") }
-    var amount by remember { mutableStateOf("") }
-    var frequency by remember { mutableStateOf(SubscriptionFrequency.MONTHLY) }
-    var nextPaymentDate by remember { mutableStateOf(System.currentTimeMillis()) }
+    var name by remember { mutableStateOf(initial?.name ?: "") }
+    var amount by remember { mutableStateOf(initial?.amount?.toString() ?: "") }
+    var frequency by remember { mutableStateOf(initial?.frequency ?: SubscriptionFrequency.MONTHLY) }
+    var nextPaymentDate by remember { mutableStateOf(initial?.nextPaymentDate ?: System.currentTimeMillis()) }
     var showDatePicker by remember { mutableStateOf(false) }
-    var selectedCategory by remember { mutableStateOf<Category?>(null) }
+    var selectedCategory by remember { mutableStateOf(categories.find { it.id == initial?.categoryId }) }
     var categoryMenuExpanded by remember { mutableStateOf(false) }
+    var isSaving by remember { mutableStateOf(false) }
 
     Column(modifier = Modifier.fillMaxWidth().padding(horizontal = 24.dp, vertical = 8.dp)) {
-        Text("Add subscription", style = MaterialTheme.typography.titleLarge)
+        Text(if (initial == null) "Add subscription" else "Edit subscription", style = MaterialTheme.typography.titleLarge)
         Spacer(modifier = Modifier.height(16.dp))
 
         OutlinedTextField(
@@ -124,9 +127,10 @@ fun AddSubscriptionForm(
 
         Button(
             onClick = {
+                isSaving = true
                 onSave(name, amount.toDoubleOrNull() ?: 0.0, frequency, nextPaymentDate, selectedCategory?.id)
             },
-            enabled = name.isNotBlank() && (amount.toDoubleOrNull() ?: 0.0) > 0.0,
+            enabled = !isSaving && name.isNotBlank() && (amount.toDoubleOrNull() ?: 0.0) > 0.0,
             modifier = Modifier.fillMaxWidth()
         ) {
             Text("Save")

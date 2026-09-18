@@ -4,6 +4,8 @@ import androidx.room.Room
 import androidx.test.core.app.ApplicationProvider
 import com.spendly.app.data.local.BudgetEntity
 import com.spendly.app.data.local.CategoryEntity
+import com.spendly.app.data.local.GoalEntity
+import com.spendly.app.data.local.SubscriptionEntity
 import com.spendly.app.data.local.TransactionEntity
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.test.runTest
@@ -177,5 +179,116 @@ class SpendlyDatabaseTest {
         assertEquals("b1", duplicate?.id)
         assertNull(differentPeriod)
         assertNull(excludingSelf)
+    }
+
+    private fun subscriptionEntity(
+        id: String,
+        userId: String,
+        categoryId: String? = null,
+        isActive: Boolean = true,
+        amount: Double = 199.0
+    ) = SubscriptionEntity(
+        id = id,
+        userId = userId,
+        name = "Netflix",
+        amount = amount,
+        frequency = "MONTHLY",
+        nextPaymentDate = 0L,
+        categoryId = categoryId,
+        isActive = isActive,
+        updatedAt = 0L
+    )
+
+    @Test
+    fun `subscription dao observeActive excludes canceled subscriptions`() = runTest {
+        val dao = database.subscriptionDao()
+        dao.insert(subscriptionEntity("s1", userId = "userA", isActive = true))
+        dao.insert(subscriptionEntity("s2", userId = "userA", isActive = false))
+
+        assertEquals(1, dao.observeActive("userA").first().size)
+        assertEquals(2, dao.observeAll("userA").first().size)
+    }
+
+    @Test
+    fun `subscription dao only returns rows for the requested user`() = runTest {
+        val dao = database.subscriptionDao()
+        dao.insert(subscriptionEntity("s1", userId = "userA"))
+        dao.insert(subscriptionEntity("s2", userId = "userB"))
+
+        assertEquals(1, dao.observeAll("userA").first().size)
+        assertEquals(1, dao.observeAll("userB").first().size)
+    }
+
+    @Test
+    fun `cancelling a subscription sets isActive false and retains the record`() = runTest {
+        val dao = database.subscriptionDao()
+        dao.insert(subscriptionEntity("s1", userId = "userA", isActive = true))
+
+        val existing = dao.getById("s1")!!
+        dao.update(existing.copy(isActive = false, updatedAt = 1L))
+
+        val canceled = dao.getById("s1")
+        assertEquals(false, canceled?.isActive)
+        assertEquals("s1", canceled?.id)
+    }
+
+    @Test
+    fun `subscription category foreign key is cleared when category is deleted`() = runTest {
+        database.categoryDao().insertAll(listOf(CategoryEntity(id = "c1", userId = "userA", name = "Food", isDefault = true)))
+        database.subscriptionDao().insert(subscriptionEntity("s1", userId = "userA", categoryId = "c1"))
+
+        database.openHelper.writableDatabase.execSQL("DELETE FROM categories WHERE id = 'c1'")
+
+        assertNull(database.subscriptionDao().getById("s1")?.categoryId)
+    }
+
+    private fun goalEntity(
+        id: String,
+        userId: String,
+        targetAmount: Double = 10000.0,
+        currentSaved: Double = 0.0,
+        targetDate: Long? = null
+    ) = GoalEntity(
+        id = id,
+        userId = userId,
+        name = "New laptop",
+        targetAmount = targetAmount,
+        currentSaved = currentSaved,
+        targetDate = targetDate,
+        createdAt = 0L,
+        updatedAt = 0L
+    )
+
+    @Test
+    fun `goal dao only returns rows for the requested user`() = runTest {
+        val dao = database.goalDao()
+        dao.insert(goalEntity("g1", userId = "userA"))
+        dao.insert(goalEntity("g2", userId = "userB"))
+
+        assertEquals(1, dao.observeAll("userA").first().size)
+        assertEquals(1, dao.observeAll("userB").first().size)
+    }
+
+    @Test
+    fun `goal persists across insert, update, and hard delete`() = runTest {
+        val dao = database.goalDao()
+        dao.insert(goalEntity("g1", userId = "userA", currentSaved = 0.0))
+
+        val inserted = dao.getById("g1")
+        assertEquals(0.0, inserted?.currentSaved)
+
+        dao.update(inserted!!.copy(currentSaved = 500.0))
+        assertEquals(500.0, dao.getById("g1")?.currentSaved)
+
+        dao.deleteById("g1")
+        assertNull(dao.getById("g1"))
+    }
+
+    @Test
+    fun `creating a goal or subscription never inserts a row into transactions`() = runTest {
+        database.goalDao().insert(goalEntity("g1", userId = "userA"))
+        database.subscriptionDao().insert(subscriptionEntity("s1", userId = "userA"))
+
+        assertEquals(0, database.transactionDao().observeAll("userA").first().size)
     }
 }
