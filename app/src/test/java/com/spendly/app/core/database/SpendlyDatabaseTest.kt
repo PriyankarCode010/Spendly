@@ -2,7 +2,9 @@ package com.spendly.app.core.database
 
 import androidx.room.Room
 import androidx.test.core.app.ApplicationProvider
+import com.spendly.app.data.local.BmiEntity
 import com.spendly.app.data.local.BudgetEntity
+import com.spendly.app.data.local.CalendarExportEntity
 import com.spendly.app.data.local.CategoryEntity
 import com.spendly.app.data.local.GoalEntity
 import com.spendly.app.data.local.SubscriptionEntity
@@ -290,5 +292,53 @@ class SpendlyDatabaseTest {
         database.subscriptionDao().insert(subscriptionEntity("s1", userId = "userA"))
 
         assertEquals(0, database.transactionDao().observeAll("userA").first().size)
+    }
+
+    private fun bmiEntity(id: String, userId: String, heightCm: Double = 170.0, weightKg: Double = 70.0, recordedAt: Long = 0L) =
+        BmiEntity(id = id, userId = userId, heightCm = heightCm, weightKg = weightKg, recordedAt = recordedAt)
+
+    @Test
+    fun `bmi dao only returns rows for the requested user, newest first`() = runTest {
+        val dao = database.bmiDao()
+        dao.insert(bmiEntity("b1", userId = "userA", recordedAt = 1L))
+        dao.insert(bmiEntity("b2", userId = "userA", recordedAt = 2L))
+        dao.insert(bmiEntity("b3", userId = "userB", recordedAt = 1L))
+
+        val userAHistory = dao.observeAll("userA").first()
+        assertEquals(2, userAHistory.size)
+        assertEquals("b2", userAHistory.first().id)
+        assertEquals(1, dao.observeAll("userB").first().size)
+    }
+
+    @Test
+    fun `bmi entries never appear in transactions, budgets, or goals tables`() = runTest {
+        database.bmiDao().insert(bmiEntity("b1", userId = "userA"))
+
+        assertEquals(0, database.transactionDao().observeAll("userA").first().size)
+        assertEquals(0, database.budgetDao().observeAll("userA").first().size)
+        assertEquals(0, database.goalDao().observeAll("userA").first().size)
+    }
+
+    @Test
+    fun `calendar export dao upsert replaces the record instead of duplicating it`() = runTest {
+        val dao = database.calendarExportDao()
+        dao.upsert(CalendarExportEntity(id = "SUBSCRIPTION:s1", userId = "userA", sourceType = "SUBSCRIPTION", sourceId = "s1", exportedAt = 1L))
+        dao.upsert(CalendarExportEntity(id = "SUBSCRIPTION:s1", userId = "userA", sourceType = "SUBSCRIPTION", sourceId = "s1", exportedAt = 2L))
+
+        val records = dao.observeAll("userA", "SUBSCRIPTION").first()
+        assertEquals(1, records.size)
+        assertEquals(2L, records.single().exportedAt)
+    }
+
+    @Test
+    fun `calendar export dao scopes by user and source type`() = runTest {
+        val dao = database.calendarExportDao()
+        dao.upsert(CalendarExportEntity(id = "SUBSCRIPTION:s1", userId = "userA", sourceType = "SUBSCRIPTION", sourceId = "s1", exportedAt = 1L))
+        dao.upsert(CalendarExportEntity(id = "GOAL:g1", userId = "userA", sourceType = "GOAL", sourceId = "g1", exportedAt = 1L))
+        dao.upsert(CalendarExportEntity(id = "SUBSCRIPTION:s2", userId = "userB", sourceType = "SUBSCRIPTION", sourceId = "s2", exportedAt = 1L))
+
+        assertEquals(1, dao.observeAll("userA", "SUBSCRIPTION").first().size)
+        assertEquals(1, dao.observeAll("userA", "GOAL").first().size)
+        assertEquals(1, dao.observeAll("userB", "SUBSCRIPTION").first().size)
     }
 }

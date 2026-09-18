@@ -1,7 +1,9 @@
 package com.spendly.app.data.repository
 
 import com.spendly.app.domain.repository.AuthRepository
+import com.spendly.app.domain.repository.BmiRepository
 import com.spendly.app.domain.repository.BudgetRepository
+import com.spendly.app.domain.repository.CalendarExportRepository
 import com.spendly.app.domain.repository.CategoryRepository
 import com.spendly.app.domain.repository.GoalRepository
 import com.spendly.app.domain.repository.ProfileRepository
@@ -44,4 +46,12 @@ abstract class RepositoryModule {
     @Binds
     @Singleton
     abstract fun bindGoalRepository(impl: GoalRepositoryImpl): GoalRepository
+
+    @Binds
+    @Singleton
+    abstract fun bindBmiRepository(impl: BmiRepositoryImpl): BmiRepository
+
+    @Binds
+    @Singleton
+    abstract fun bindCalendarExportRepository(impl: CalendarExportRepositoryImpl): CalendarExportRepository
 }

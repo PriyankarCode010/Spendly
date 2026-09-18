@@ -2,8 +2,12 @@ package com.spendly.app.core.database
 
 import androidx.room.Database
 import androidx.room.RoomDatabase
+import com.spendly.app.data.local.BmiDao
+import com.spendly.app.data.local.BmiEntity
 import com.spendly.app.data.local.BudgetDao
 import com.spendly.app.data.local.BudgetEntity
+import com.spendly.app.data.local.CalendarExportDao
+import com.spendly.app.data.local.CalendarExportEntity
 import com.spendly.app.data.local.CategoryDao
 import com.spendly.app.data.local.CategoryEntity
 import com.spendly.app.data.local.GoalDao
@@ -18,9 +22,10 @@ import com.spendly.app.data.local.TransactionEntity
 @Database(
     entities = [
         ProfileEntity::class, CategoryEntity::class, TransactionEntity::class,
-        BudgetEntity::class, SubscriptionEntity::class, GoalEntity::class
+        BudgetEntity::class, SubscriptionEntity::class, GoalEntity::class,
+        BmiEntity::class, CalendarExportEntity::class
     ],
-    version = 6,
+    version = 7,
     exportSchema = false
 )
 abstract class SpendlyDatabase : RoomDatabase() {
@@ -30,4 +35,6 @@ abstract class SpendlyDatabase : RoomDatabase() {
     abstract fun budgetDao(): BudgetDao
     abstract fun subscriptionDao(): SubscriptionDao
     abstract fun goalDao(): GoalDao
+    abstract fun bmiDao(): BmiDao
+    abstract fun calendarExportDao(): CalendarExportDao
 }
