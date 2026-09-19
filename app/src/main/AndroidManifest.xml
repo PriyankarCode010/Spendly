@@ -39,6 +39,21 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
+
+        <!-- Automatic transaction detection (Phase 7): observes notifications
+             only from the payment app packages this app already declares
+             visibility to above. Requires the user to grant "Notification
+             access" manually in system Settings - a revocable special access,
+             not a requestable runtime permission. -->
+        <service
+            android:name=".core.notification.SpendlyNotificationListenerService"
+            android:exported="true"
+            android:label="@string/app_name"
+            android:permission="android.permission.BIND_NOTIFICATION_LISTENER_SERVICE">
+            <intent-filter>
+                <action android:name="android.service.notification.NotificationListenerService" />
+            </intent-filter>
+        </service>
     </application>
 
 </manifest>

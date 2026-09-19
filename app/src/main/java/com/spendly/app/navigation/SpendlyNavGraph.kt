@@ -36,6 +36,7 @@ object Routes {
     const val PLANNER = "planner"
     const val CALENDAR = "calendar"
     const val BMI = "bmi"
+    const val SUGGESTED_TRANSACTIONS = "suggested_transactions"
     const val AI = "ai"
 }
 

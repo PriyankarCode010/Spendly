@@ -18,6 +18,7 @@ import androidx.compose.material.icons.filled.QrCodeScanner
 import androidx.compose.material.icons.filled.Savings
 import androidx.compose.material.icons.filled.SmartToy
 import androidx.compose.material.icons.filled.Subscriptions
+import androidx.compose.material.icons.filled.NotificationsActive
 import androidx.compose.material3.DrawerValue
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.HorizontalDivider
@@ -53,6 +54,7 @@ import com.spendly.app.feature.goals.GoalsScreen
 import com.spendly.app.feature.payments.PaymentsScreen
 import com.spendly.app.feature.planner.PlannerScreen
 import com.spendly.app.feature.subscriptions.SubscriptionsScreen
+import com.spendly.app.feature.suggestions.SuggestedTransactionsScreen
 import com.spendly.app.feature.transactions.TransactionsScreen
 import kotlinx.coroutines.launch
 
@@ -62,6 +64,7 @@ private val drawerDestinations = listOf(
     DrawerDestination("Dashboard", Routes.DASHBOARD, Icons.Filled.Home),
     DrawerDestination("Scan & Pay", Routes.PAYMENTS, Icons.Filled.QrCodeScanner),
     DrawerDestination("Transactions", Routes.TRANSACTIONS, Icons.AutoMirrored.Filled.ReceiptLong),
+    DrawerDestination("Suggested Transactions", Routes.SUGGESTED_TRANSACTIONS, Icons.Filled.NotificationsActive),
     DrawerDestination("Budgets", Routes.BUDGETS, Icons.Filled.PieChart),
     DrawerDestination("Analytics", Routes.ANALYTICS, Icons.Filled.Insights),
     DrawerDestination("Subscriptions", Routes.SUBSCRIPTIONS, Icons.Filled.Subscriptions),
@@ -155,6 +158,7 @@ fun MainAppShell(onSignOut: () -> Unit) {
                 }
                 composable(Routes.PAYMENTS) { PaymentsScreen() }
                 composable(Routes.TRANSACTIONS) { TransactionsScreen() }
+                composable(Routes.SUGGESTED_TRANSACTIONS) { SuggestedTransactionsScreen() }
                 composable(Routes.BUDGETS) { BudgetsScreen() }
                 composable(Routes.ANALYTICS) { AnalyticsScreen() }
                 composable(Routes.SUBSCRIPTIONS) { SubscriptionsScreen() }

@@ -64,6 +64,9 @@ object DatabaseModule {
     @Provides
     fun provideCalendarExportDao(database: SpendlyDatabase) = database.calendarExportDao()
 
+    @Provides
+    fun provideTransactionSuggestionDao(database: SpendlyDatabase) = database.transactionSuggestionDao()
+
     private fun generatePassphrase(): String {
         val bytes = ByteArray(32)
         SecureRandom().nextBytes(bytes)

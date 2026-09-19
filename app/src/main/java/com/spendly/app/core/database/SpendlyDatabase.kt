@@ -18,14 +18,16 @@ import com.spendly.app.data.local.SubscriptionDao
 import com.spendly.app.data.local.SubscriptionEntity
 import com.spendly.app.data.local.TransactionDao
 import com.spendly.app.data.local.TransactionEntity
+import com.spendly.app.data.local.TransactionSuggestionDao
+import com.spendly.app.data.local.TransactionSuggestionEntity
 
 @Database(
     entities = [
         ProfileEntity::class, CategoryEntity::class, TransactionEntity::class,
         BudgetEntity::class, SubscriptionEntity::class, GoalEntity::class,
-        BmiEntity::class, CalendarExportEntity::class
+        BmiEntity::class, CalendarExportEntity::class, TransactionSuggestionEntity::class
     ],
-    version = 7,
+    version = 8,
     exportSchema = false
 )
 abstract class SpendlyDatabase : RoomDatabase() {
@@ -37,4 +39,5 @@ abstract class SpendlyDatabase : RoomDatabase() {
     abstract fun goalDao(): GoalDao
     abstract fun bmiDao(): BmiDao
     abstract fun calendarExportDao(): CalendarExportDao
+    abstract fun transactionSuggestionDao(): TransactionSuggestionDao
 }

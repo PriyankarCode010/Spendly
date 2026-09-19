@@ -9,6 +9,7 @@ import com.spendly.app.domain.repository.GoalRepository
 import com.spendly.app.domain.repository.ProfileRepository
 import com.spendly.app.domain.repository.SubscriptionRepository
 import com.spendly.app.domain.repository.TransactionRepository
+import com.spendly.app.domain.repository.TransactionSuggestionRepository
 import dagger.Binds
 import dagger.Module
 import dagger.hilt.InstallIn
@@ -54,4 +55,8 @@ abstract class RepositoryModule {
     @Binds
     @Singleton
     abstract fun bindCalendarExportRepository(impl: CalendarExportRepositoryImpl): CalendarExportRepository
+
+    @Binds
+    @Singleton
+    abstract fun bindTransactionSuggestionRepository(impl: TransactionSuggestionRepositoryImpl): TransactionSuggestionRepository
 }

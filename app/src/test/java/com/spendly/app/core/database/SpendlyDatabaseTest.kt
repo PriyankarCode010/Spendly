@@ -9,6 +9,7 @@ import com.spendly.app.data.local.CategoryEntity
 import com.spendly.app.data.local.GoalEntity
 import com.spendly.app.data.local.SubscriptionEntity
 import com.spendly.app.data.local.TransactionEntity
+import com.spendly.app.data.local.TransactionSuggestionEntity
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.test.runTest
 import org.junit.After
@@ -340,5 +341,92 @@ class SpendlyDatabaseTest {
         assertEquals(1, dao.observeAll("userA", "SUBSCRIPTION").first().size)
         assertEquals(1, dao.observeAll("userA", "GOAL").first().size)
         assertEquals(1, dao.observeAll("userB", "SUBSCRIPTION").first().size)
+    }
+
+    private fun suggestionEntity(
+        id: String,
+        userId: String,
+        status: String = "PENDING",
+        amount: Double? = 250.0,
+        resultingTransactionId: String? = null
+    ) = TransactionSuggestionEntity(
+        id = id,
+        userId = userId,
+        sourcePackage = "com.phonepe.app",
+        amount = amount,
+        direction = "DEBIT",
+        merchant = "Cafe",
+        referenceId = null,
+        notificationPostedAt = 0L,
+        status = status,
+        createdAt = 0L,
+        resultingTransactionId = resultingTransactionId
+    )
+
+    @Test
+    fun `transaction suggestion dao only returns pending rows for the requested user`() = runTest {
+        val dao = database.transactionSuggestionDao()
+        dao.insert(suggestionEntity("s1", userId = "userA", status = "PENDING"))
+        dao.insert(suggestionEntity("s2", userId = "userA", status = "DISMISSED"))
+        dao.insert(suggestionEntity("s3", userId = "userB", status = "PENDING"))
+
+        assertEquals(1, dao.observePending("userA").first().size)
+        assertEquals(2, dao.observeAll("userA").first().size)
+        assertEquals(1, dao.observePending("userB").first().size)
+    }
+
+    @Test
+    fun `inserting a transaction suggestion never inserts a row into transactions`() = runTest {
+        database.transactionSuggestionDao().insert(suggestionEntity("s1", userId = "userA"))
+
+        assertEquals(0, database.transactionDao().observeAll("userA").first().size)
+    }
+
+    @Test
+    fun `dismissing a suggestion updates its status without creating a transaction`() = runTest {
+        val dao = database.transactionSuggestionDao()
+        dao.insert(suggestionEntity("s1", userId = "userA", status = "PENDING"))
+
+        val existing = dao.getById("s1")!!
+        dao.update(existing.copy(status = "DISMISSED"))
+
+        assertEquals("DISMISSED", dao.getById("s1")?.status)
+        assertNull(dao.getById("s1")?.resultingTransactionId)
+        assertEquals(0, database.transactionDao().observeAll("userA").first().size)
+    }
+
+    @Test
+    fun `confirming a suggestion links it to a transaction id`() = runTest {
+        database.transactionDao().insert(transactionEntity("t1", userId = "userA", amount = 250.0))
+        val dao = database.transactionSuggestionDao()
+        dao.insert(suggestionEntity("s1", userId = "userA"))
+
+        val existing = dao.getById("s1")!!
+        dao.update(existing.copy(status = "CONFIRMED", resultingTransactionId = "t1"))
+
+        assertEquals("t1", dao.getById("s1")?.resultingTransactionId)
+    }
+
+    @Test
+    fun `resultingTransactionId is cleared when the linked transaction is deleted`() = runTest {
+        database.transactionDao().insert(transactionEntity("t1", userId = "userA", amount = 250.0))
+        val dao = database.transactionSuggestionDao()
+        dao.insert(suggestionEntity("s1", userId = "userA", status = "CONFIRMED", resultingTransactionId = "t1"))
+
+        database.transactionDao().deleteById("t1")
+
+        assertNull(dao.getById("s1")?.resultingTransactionId)
+    }
+
+    @Test
+    fun `findPendingInWindow scopes by user, package, and status`() = runTest {
+        val dao = database.transactionSuggestionDao()
+        dao.insert(suggestionEntity("s1", userId = "userA", status = "PENDING").copy(notificationPostedAt = 1000L))
+        dao.insert(suggestionEntity("s2", userId = "userA", status = "DISMISSED").copy(notificationPostedAt = 1000L))
+
+        val inWindow = dao.findPendingInWindow("userA", "com.phonepe.app", 0L, 2000L)
+
+        assertEquals(1, inWindow.size)
+        assertEquals("s1", inWindow.single().id)
     }
 }
